@@ -48,7 +48,7 @@ void scan_omp(long* prefix_sum, const long* A, long n) {
       offset += partial_sum[i];
 
     #pragma omp for schedule(static)
-    for (int i=1; i<n; i++)
+    for (long i=1; i<n; i++)
       prefix_sum[i] += offset;
 
   }
