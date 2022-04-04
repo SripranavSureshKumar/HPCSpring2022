@@ -15,6 +15,43 @@ void scan_seq(long* prefix_sum, const long* A, long n) {
 
 void scan_omp(long* prefix_sum, const long* A, long n) {
   // TODO: implement multi-threaded OpenMP scan
+  if (n == 0) return;
+
+  //prefix_sum[0] = 0;
+  int numthreads;
+  long *partial_sum;
+  
+  #pragma omp parallel num_threads(6)
+  {
+    int tid = omp_get_thread_num();
+    numthreads = omp_get_num_threads();
+    
+    if (tid == 0) printf("Number of threads = %d\n", numthreads);
+    
+    partial_sum = (long*)malloc(sizeof(long) * (numthreads+1));
+    #pragma omp single
+    prefix_sum[0] = 0;
+
+    long sum = 0;
+
+    #pragma omp for schedule(static) nowait
+    for(long i=1; i<n; i++){
+      sum += A[i-1];
+      prefix_sum[i] = sum;
+    }    
+    partial_sum[tid+1] = sum;
+
+    #pragma omp barrier
+
+    long offset = 0;
+    for(int i=0; i<(tid+1); i++) 
+      offset += partial_sum[i];
+
+    #pragma omp for schedule(static)
+    for (int i=1; i<n; i++)
+      prefix_sum[i] += offset;
+
+  }
 }
 
 int main() {
